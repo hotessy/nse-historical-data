@@ -1,6 +1,6 @@
-import nseData from "./index";
+import nseHistoricalData from "./src/index";
 
-nseData({
+nseHistoricalData({
   indexName: "NIFTY 50",
   date: {
     start: "2018-01-07",

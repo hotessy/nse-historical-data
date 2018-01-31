@@ -60,3 +60,4 @@ typings/
 # others
 .DS_Store
 random.*
+lib/

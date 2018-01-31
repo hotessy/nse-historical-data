@@ -41,7 +41,7 @@ let options = {
 ```
 const nseHistoricalData = require("nse-historical-data");
 
-nseHistoricalData(options)
+nseHistoricalData.default(options)
   .then(function(data) {
     console.log(data);
   })

@@ -1,6 +1,6 @@
 {
   "name": "nse-historical-data",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "Get historical P/E, P/B and Div. Yield values of indices listed on the National Stock Exchange, India.",
   "main": "lib/index.js",
   "scripts": {
