@@ -1,0 +1,30 @@
+{
+  "name": "nse-historical-data",
+  "version": "1.0.0",
+  "description":
+    "Get historical P/E, P/B and Div. Yield values of indices listed on the National Stock Exchange, India.",
+  "main": "index.js",
+  "scripts": {
+    "test": "babel-node test.js"
+  },
+  "keywords": ["stock-market", "financial-data", "nse-stock-data", "india"],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/hotessy/nse-historical-data.git"
+  },
+  "author": "hotessy (https://github.com/hotessy)",
+  "license": "MIT",
+  "readme": "README.md",
+  "dependencies": {
+    "bluebird": "^3.5.1",
+    "lodash": "^4.17.4",
+    "moment-timezone": "^0.5.14",
+    "request": "^2.83.0",
+    "request-promise": "^4.2.2",
+    "tabletojson": "^0.6.0"
+  },
+  "devDependencies": {
+    "babel-cli": "^6.26.0",
+    "babel-preset-env": "^1.6.1"
+  }
+}
