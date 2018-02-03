@@ -1,30 +1,18 @@
 import { reduce, find, template, indexOf, forEach } from "lodash";
 import moment from "moment-timezone";
 import requestPromise from "request-promise";
-import tabletojson from "tabletojson";
-import indices from "./indices";
+import csvjson from "csvjson";
+import indices from "./Indices";
+
+const url = template(
+  "https://www.nseindia.com/content/indices/ind_close_all_${datestamp}.csv"
+);
 
 export class Options {
-  constructor(indexName, dateRange, metrics) {
+  constructor(date) {
     this.method = "GET";
-    this.uri =
-      "https://www.nseindia.com/products/dynaContent/equities/indices/historical_pepb.jsp";
-    this.indexName = indexName;
-    this.fromDate = dateRange.fromDate;
-    this.toDate = dateRange.toDate;
-    this.yield1 = metrics.pe ? "pe" : undefined;
-    this.yield2 = metrics.pb ? "pb" : undefined;
-    this.yield3 = metrics.dy ? "dy" : undefined;
-
-    let all = reduce(
-      [this.yield1, this.yield2, this.yield2],
-      (result, value) => {
-        result && value;
-      }
-    );
-    this.yield4 = all ? "all" : undefined;
+    this.uri = url({ datestamp: date });
   }
-
   get requestObject() {
     return {
       method: this.method,
@@ -33,38 +21,44 @@ export class Options {
         "User-Agent": "request-promise",
         Connection: "keep-alive"
       },
-      qs: {
-        indexName: this.indexName,
-        fromDate: this.fromDate,
-        toDate: this.toDate,
-        yield1: String(this.yield1),
-        yield2: String(this.yield2),
-        yield3: String(this.yield3),
-        yield4: String(this.yield4)
-      }
+      json: true,
+      resolveWithFullResponse: true
     };
   }
 }
 
-export function indexNameChecker(indexName) {
-  let name;
-  for (let category of indices) {
-    name = find(category.option, index => {
+export function indexNamesChecker(indexNames) {
+  let allowedIndexNames = [];
+
+  forEach(indices, indexObject => {
+    allowedIndexNames.push(indexObject.name);
+  });
+
+  if (
+    typeof indexNames === "string" &&
+    indexNames.replace(/\s/g, "").toLowerCase() === "all"
+  ) {
+    return allowedIndexNames;
+  }
+
+  let formattedIndexNames = [];
+
+  for (let indexName of indexNames) {
+    let index = find(allowedIndexNames, allowedIndexName => {
       return (
-        index.text.replace(/\s/g, "").toLowerCase() ===
+        allowedIndexName.replace(/\s/g, "").toLowerCase() ===
         indexName.replace(/\s/g, "").toLowerCase()
       );
     });
 
-    if (name) {
-      return name.value;
+    if (index) {
+      formattedIndexNames.push(index);
+    } else {
+      let err = template('indexName "${indexName}" do not exist');
+      throw new Error(err({ indexNames: index }));
     }
   }
-
-  if (!name) {
-    let err = template('indexName "${indexName}" does not exist');
-    throw new Error(err({ indexName: indexName }));
-  }
+  return formattedIndexNames;
 }
 
 export function dateRangeChecker(dateRange) {
@@ -74,40 +68,52 @@ export function dateRangeChecker(dateRange) {
     throw new Error("dateRange.start not defined");
   } else {
     try {
-      fromDate = moment(dateRange.start)
-        .tz("Asia/Kolkata")
-        .format("DD-MM-YYYY");
-    } catch (e) {
-      throw e;
+      fromDate = moment(dateRange.start).tz("Asia/Kolkata");
+    } catch (err) {
+      throw err;
     }
   }
 
   if (!dateRange.hasOwnProperty("end")) {
     toDate = moment()
       .tz("Asia/Kolkata")
-      .subtract(1, "days")
-      .format("DD-MM-YYYY");
+      .subtract(1, "days");
   } else {
     try {
-      toDate = moment(dateRange.end)
-        .tz("Asia/Kolkata")
-        .format("DD-MM-YYYY");
-    } catch (e) {
-      throw e;
+      toDate = moment(dateRange.end).tz("Asia/Kolkata");
+    } catch (err) {
+      throw err;
     }
   }
 
-  return { fromDate: fromDate, toDate: toDate };
+  return { start: fromDate, end: toDate };
 }
 
 export function metricsChecker(metrics) {
-  let allowedMetrics = ["pb", "pe", "dy"];
+  let allowedMetrics = [
+    "pb",
+    "pe",
+    "dy",
+    "high",
+    "low",
+    "open",
+    "close",
+    "volume",
+    "turnover"
+  ];
 
-  let wantedMetrics = {
-    pb: false,
-    pe: false,
-    dy: false
-  };
+  if (
+    typeof metrics === "string" &&
+    metrics.replace(/\s/g, "").toLowerCase() === "all"
+  ) {
+    return allowedMetrics;
+  }
+
+  let wantedMetrics = {};
+
+  forEach(allowedMetrics, metric => {
+    wantedMetrics[metric] = false;
+  });
 
   for (let metric of metrics) {
     if (indexOf(allowedMetrics, metric) < 0) {
@@ -121,13 +127,27 @@ export function metricsChecker(metrics) {
   return wantedMetrics;
 }
 
-export async function getHistoricalData(indexName, dateRange, metrics) {
-  let options = new Options(indexName, dateRange, metrics).requestObject;
+export function wayChecker(way) {
+  let allowedWays = ["datewise", "metricwise", "indexwise"];
+
+  if (indexOf(allowedWays, way) < 0) {
+    let err = template('Formatting type "${way}" does not exist');
+    throw new Error(err({ way: way }));
+  } else {
+    return way;
+  }
+}
+
+export async function getHistoricalData(date) {
+  let options = new Options(date).requestObject;
   try {
     const data = await requestPromise(options);
-    let json = tabletojson.convert(data)[0];
-    json.splice(-1, 1);
-    return Promise.resolve(json);
+    if (data.statusCode == 200) {
+      let json = csvjson.toObject(data.body);
+      return Promise.resolve(json);
+    } else if (data.statusCode == 404) {
+      return Promise.resolve({});
+    }
   } catch (err) {
     return Promise.reject(err);
   }

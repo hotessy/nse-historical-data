@@ -1,17 +1,16 @@
 const nseHistoricalData = require("./lib/index");
 
 let options = {
-  indexName: "NIFTY 50",
   date: {
-    start: "2018-01-15",
-    end: "2018-01-17"
-  },
-  metrics: ["pb", "pe", "dy"]
+    start: "2018-01-04",
+    end: "2018-01-10"
+  }
 };
 
-nseHistoricalData.default(options)
+nseHistoricalData
+  .default(options)
   .then(function(data) {
-    console.log(data);
+    console.log(JSON.stringify(data));
   })
   .catch(function(err) {
     console.error(err);
