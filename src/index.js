@@ -25,7 +25,7 @@ export default function(arg) {
 
 function transformData(data, indexNames, metrics, way) {
   // TODO: write transformation function
-  return "Only ``way : datewise` supported right now ";
+  return "Only `way : datewise` supported right now ";
 }
 
 async function extractData(dateRange) {

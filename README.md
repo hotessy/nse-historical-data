@@ -4,13 +4,13 @@
 
 Get historical data from all indices listed on the [National Stock Exchange](https://www.nseindia.com/products/content/equities/indices/historical_pepb.htm), India.
 
-Available as an [npm package](https://www.npmjs.com/package/nse-historical-data): `npm i -S nse-historical-data`
+Install via [npm](https://www.npmjs.com/package/nse-historical-data): `npm i -S nse-historical-data`
 
 ## Request
 
 ```
 {
-  {
+  date : {
     start: "start date in ISO 8601 format",
     end: "end date in ISO 8601 format"
   }
@@ -21,9 +21,9 @@ Available as an [npm package](https://www.npmjs.com/package/nse-historical-data)
 
 Defining options:
 
-```
+```js
 let options = {
-  date : {
+  date: {
     start: "2018-01-12",
     end: "2018-01-16"
   }
@@ -31,8 +31,9 @@ let options = {
 const nseHistoricalData = require("nse-historical-data");
 ```
 
-```
-nseHistoricalData.default(options)
+```js
+nseHistoricalData
+  .default(options)
   .then(function(data) {
     console.log(JSON.stringify(data));
   })
@@ -42,7 +43,8 @@ nseHistoricalData.default(options)
 ```
 
 #### or ES6
-```
+
+```js
 async function getHistoricalData(options) {
   try {
     let response = await nseHistoricalData(options);
@@ -57,7 +59,7 @@ getHistoricalData(options);
 
 ### Response
 
-```
+```js
 {
   "2018-01-12": [
     {
@@ -109,6 +111,7 @@ getHistoricalData(options);
   ],
 
   "2018-01-15" : [ ... ]
-  ```
+}
+```
 
-  **NOTE:** _Other dates have been excluded from the response because the market was closed._
+**NOTE:** _Other dates have been excluded from the response because the market was closed._
